@@ -1,0 +1,19 @@
+\documentclass[a4paper,10pt]{article}
+
+
+% Speaker's name, Affiliation, Email address, Title of talk, Co-authors, Abstract (preferably in text/plain TeX form, up to 150 words)
+
+\title{A GPU Implementation for Centroidal Voronoi Tessellation of Manifolds}
+
+\author{Evan F. Bollig \\ bollig@scs.fsu.edu \\ Florida State University   \and Gordon Erlebacher \\ gerlebacher@fsu.edu \\ Florida State University}
+%Florida State University, Dept. of Scientific Computation, Dirac Science Library Tallahassee, FL 32304}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+Within the last decade, commodity Graphics Processing Units (GPUs) specialized for 2D and 3D scene rendering have seen an explosive growth in processing power compared to their general purpose counterpart, the CPU. Currently capable of near teraflop speeds and sporting gigabytes of on-board memory, GPUs have transformed from accessory video game hardware to truly general purpose computational coprocessors. We introduce the first (to our knowledge) implementation to compute centroidal Voronoi tessellations of manifolds entirely on the GPU. To complete these tasks, a highly efficient flooding algorithm is used to produce the Voronoi tessellation, while a regularized sampling approach is employed to compute centroids of Voronoi regions. We consider simple surfaces (2-manifolds) of the form $f (u, v) \rightarrow (u, v, z (u, v))$ partitioned according to Euclidean-based metrics, with the generating points updated by a deterministic Lloyd's method. 
+\end{abstract}
+
+\end{document}

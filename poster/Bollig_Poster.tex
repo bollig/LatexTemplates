@@ -1,0 +1,312 @@
+ % NOTE: Sciposter is dependent on the following packages: a0size, boxedminipage, color,
+% graphics, ifthen, shadow, times
+% You need to have these packages installed for for sciposter to run properly
+
+%\documentclass[landscape, boxedsections]{sciposter}
+\documentclass[portrait, boxedsections]{sciposter}
+
+%%% Document Class Options %%%%
+%portrait		% The default, orients paper in portrait mode
+%landscape 		% Orients paper in landscape mode		
+%boxedsections	% The default, makes section titles appear in boxes
+%ruledsections	% Makes section titles appear underlined
+%plain sections	% Makes section titles appear plain 
+
+
+\usepackage{epsfig}
+\usepackage{fancybox}			% Figures in boxes (drop shadows)
+\usepackage{sectionbox}			% Keep sections coherent
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{multicol}
+\usepackage{graphicx} 
+
+\newtheorem{Def}{Definition}
+\newcommand{\cM}{\mathcal{M}}	% script M for manifolds
+
+%\definecolor{garnet}{rgb}{0.7,0,0.2} 
+\definecolor{garnet}{cmyk}{0.0, 1.0, 0.89, 0.43}
+\title{\color{garnet}Computing Centroidal Voronoi Tessellations on the GPU}
+
+% The author's or authors' names
+\author{Evan F. Bollig, Advisor: Gordon Erlebacher}
+ 
+% insert correct institute name
+\institute{Department of Scientific Computing, Florida State University}
+
+\email{bollig@scs.fsu.edu}  % shows author email address below institute
+
+%%%%%%%%%% Image Reference For Logos Near Title %%%%%%%%%%
+% The following commands can be used to alter the default logo settings
+\leftlogo[1.25]{dsc_logo}  % defines logo to left of title (with numeric scale factor)
+\rightlogo[0.75]{fsu_seal}  % same but on right
+% As with all images, these require presence of files leftlogofilename.eps and  
+% rightlogofilename.eps, or other supported format in the current directory  
+
+%%%%%%%%%% Image Reference For Body of Document %%%%%%%%%%
+%%%%% Want two images side by side? Use this.
+%\newcommand{\imsize}{0.45\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+%\begin{figure}
+%\begin{center}
+%{\resizebox{\imsize}{!}{\includegraphics{filenameA}}}
+%{\resizebox{\imsize}{!}{\includegraphics{filenameB}}}
+%\end{center}
+%\caption{ \label{fig:ref for citing} Caption text.}
+%\end{figure}
+
+%%%%% Want three images side by side? Use this!
+%\renewcommand{\imsize}{0.3\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+%\begin{figure}
+%\begin{center}
+%{\resizebox{\imsize}{!}{\includegraphics{filenameC}}}
+%{\resizebox{\imsize}{!}{\includegraphics{filenameD}}}
+%{\resizebox{\imsize}{!}{\includegraphics{filenameE}}}\\
+%\end{center}
+%\caption{ \label{fig:for citing} Caption text.}
+%\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%The location where the poster is being presented at (appears as footer)
+\conference{Dept. of Scientific Computing, {\bf Computational Expo '09}, 14 April 2009, Tallahassee, FL }
+%\LEFTSIDEfootlogo  % Place conference information on bottom right side of poster
+
+\maketitle
+
+%%% Begin of Multicols-Enviroment
+% I believe that 3 columns are nice for Portrait mode and 4 are nice for Landscape
+\begin{multicols}{3}
+
+
+%%% Abstract
+\begin{abstract}
+\PARstart{I}{ n} the last decade, commodity Graphics Processing Units (GPUs) specialized for 2D and 3D graphics have dramatically changed in purpose from purely video game hardware to something akin to their general purpose counterpart, the CPU. Currently capable of near teraflop speeds with gigabytes of on-board memory, GPUs have transformed from accessory hardware for a young generation to general purpose coprocessors for scientific computation. \bigskip
+
+
+This poster presents results from the first (to our knowledge) implementation to compute centroidal Voronoi tessellations of manifolds entirely on the GPU. To complete these tasks, a highly efficient flooding algorithm is used to produce the Voronoi tessellation, while a regularized sampling approach is employed to compute centroids of Voronoi regions. We consider simple surfaces (2-manifolds) of the form $f (u, v) \rightarrow (u, v, z (u, v))$ partitioned according to Euclidean-based metrics, with the generating points updated by a deterministic Lloyd's method. 
+\end{abstract}
+
+%%% Introduction
+\section{Definitions}
+
+\hrule
+  \begin{Def}
+   $\{V_i\}_{i=1}^k$ is a \textcolor{garnet}{tessellation} of the bounded open set $\Omega \subseteq
+ \mathbb{R}^N $ if the following are satisfied:
+   \begin{itemize}
+                \item $V_i \cap V_j = \emptyset$ for $i \neq j$
+                \item $\cup_{i=1}^k \overline{V_i} = \overline{\Omega}$
+   \end{itemize}
+   \end{Def}
+
+   \hrule
+
+   \begin{Def}
+        Given a set of \textcolor{garnet}{seeds} $\{s_i\}_{i=1}^k \in \Omega$, the set $\{{V_i}\}_{i=1}^k$ is  \textcolor{garnet}{Voronoi tessellation} of $\Omega$ if
+        \begin{center}
+         ${V_i} = \{ x \in \Omega \ \ \mid\ \ dist(x, s_i) < dist( x, s_j )$ for 
+$i,j = 1,..,k$ and $i \neq j \}$ 
+\end{center}
+        \end{Def}
+Note that we call ${V_i}$ a \textcolor{garnet}{Voronoi region} of $\Omega$. \\
+
+\hrule
+
+ \begin{Def}
+% Given the tessellation $\{V\}_{i=1}^k$ of $\Omega \subseteq \R^N$ and a density function $\rho$ defined in $\Omega$, the \alert{mass centroid} (center of mass) of each region $V_i$ is
+Given the tessellation $\{V_i\}_{i=1}^k$ of $\Omega \subseteq \mathbb{R}^N$ and a general density function $\rho(x)$, the \textcolor{garnet}{mass centroid} (center of mass) of each region $V_i$ is
+\begin{center}
+ ${z_i} = \frac{ \int_{V_i} x \rho \left( x \right) dx }{ \int_{V_i} \rho\left( x \right) dx }$.
+\end{center}
+ If 
+ \begin{center}
+ ${z_i} = s_i$      for $i = 1,..., k$,
+\end{center}
+then $\{V_i\}_{i=1}^k$ form a \textcolor{garnet}{\emph{centroidal} Voronoi tessellation (CVT)}\cite{Du:1999}, which minimizes the energy
+\begin{center}
+ $F(\{z_i, V_i\}_{i=1}^k) = \sum_{i=1}^k \int_{V_i} \rho(x)\ dist(x, z_i)^2 dx$
+ \end{center}
+\end{Def}
+\hrule
+
+\newcommand{\imsize}{0.45\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}
+	\begin{center}
+		{\resizebox{\imsize}{!}{\includegraphics{plane_3t_1000i_200s_1024r_first.png}}}
+		{\resizebox{\imsize}{!}{\includegraphics{plane_3t_1000i_200s_1024r_final.png}}}
+	\end{center} 
+\caption{ \label{fig:voronoi} (left) Voronoi vs. (right) Centroidal Voronoi Tessellation.}
+\end{figure}
+
+\hrule
+\bigskip
+
+Note:
+\begin{itemize} 
+	\item For the manifold $\cM$ centroids may not lie on surface
+	\item The projection of $z_i$ ($z_i^c$) is the energy minimizer on $\cM$ \cite{Du:2003}
+\end{itemize}
+	
+\begin{Def} 
+	When 
+	\begin{center} 
+	$z_i^c = s_i$ for $i = 1,...,k$ 
+	\end{center}
+	the tessellation is a \textcolor{garnet}{\emph{constrained} centroidal Voronoi tessellation (CCVT)}
+\end{Def}
+
+\hrule
+
+\begin{figure}
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{shorthill_3t_1000i_200s_1024r_final}}}
+	{\resizebox{\imsize}{!}{\includegraphics{Projection}}}
+  \end{center}
+  \caption{(left) Constrained Centroidal Voronoi Tessellation of Manifold $f(u, v) = (u,v, e^{-(2u-1)^2 - (2v-1)^2})$. (right) Centroids are "constrained" (projected) to the surface at each iteration of Lloyd's method.}
+  \label{fig:edge}
+\end{figure}
+
+
+%%%%%%%%%%%%%%%% NEW COLUMN %%%%%%%%%%%%%%%%%%
+\bigskip\bigskip\bigskip\bigskip
+
+\section{Why Compute on GPUs?}
+
+\PARstart{R}{ecent} years have shown tremendous growth in GPU vs. CPU performance. At the same time, the new hardware has been joined by increasingly powerful graphics programming languages for general purpose computation. The latest language, CUDA, allows development of parallel kernels in C without required knowledge of graphics APIs like OpenGL.
+
+\renewcommand{\imsize}{0.75\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{GPU_Evolution_nocaption}}}
+  \end{center}
+  \caption{Approximate GPU vs CPU performance growth and language releases over time. The dramatic growth in performance demands consideration of GPU as a computational co-processor }
+  \label{fig:edge}
+\end{figure}
+
+
+\section{GPU Computing}
+\PARstart{P}{rogramming} for GPUs requires knowledge of the hierarchical memory, scope of data sharing, and penalties incurred by accesses at each level. 
+
+\renewcommand{\imsize}{0.85\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{GPUMemory_w_CPU}}}
+  \end{center}
+  \caption{GPUs have multiple levels of memory with increasing access penalties. Communication with the CPU is more costly than global device memory access and should be avoided.}
+  \label{fig:edge}
+\end{figure}
+
+\renewcommand{\imsize}{0.8\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{StreamProcessing}}}
+  \end{center}
+  \caption{Problems are decomposed into blocks of threads. Multiprocessors on the GPU apply kernels (programs) to blocks of threads in parallel. }
+  \label{fig:edge}
+\end{figure}
+
+\section{Algorithms}
+
+\PARstart{G}{enerating} CCVTs requires an iterative algorithm: \textcolor{garnet}{Lloyd's Method}. 
+
+\begin{algorithm}
+\begin{enumerate}
+	\item Generate Voronoi tessellation using current seeds
+	\item Calculate centroids of each Voronoi region
+	\item Project centroids onto $\cM$
+	\item Update current seeds to the projected centroids
+\end{enumerate}
+Repeat 1-4 until stopping criterion is satisfied (i.e., energy is minimized or maximum iteration is reached).
+\caption{Deterministic Lloyd's Method.}
+\end{algorithm}
+
+We generate the Voronoi tessellation with a fast, O($N^2$log($N$)) (N is one-sided domain resolution), propagation method called \textcolor{garnet}{Jump Flooding (Variant 2 + JFA)}\cite{Rong:2007}. 
+
+\bigskip
+
+Centroids are calculated using a custom algorithm that uniformly samples Voronoi regions with masking in $16\times16$ samples we call tiles. A dynamic edge scaling parameter (independently variable for each region) controls the spacing between samples according to the percentage of threads masked on the previous iteration. The complexity of this algorithm is O($t^2 S$) where $t$ is number of tiles in one direction and $S$ is number of seeds. 
+
+\renewcommand{\imsize}{\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{JumpFloodingSequence}}}
+  \end{center}
+  \caption{Jump Flooding Variant 2 + JFA. A Voronoi tessellation is formed in $log(\frac{N}{2})$ passes by GPU then scaled to twice the resolution and corrected with a final pass.}
+  \label{fig:edge}
+\end{figure}
+
+
+\renewcommand{\imsize}{0.45\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+  	{\resizebox{\imsize}{!}{\includegraphics{TileScan}}}
+	{\resizebox{\imsize}{!}{\includegraphics{planeCompareTileUnLockedEdge_4t_1000i_200s_1024r_final}}}
+  \end{center}
+  \caption{(left) Uniform sampling of Voronoi regions with masking. (right) Sample spacing is independently variable for each region. }
+  \label{fig:edge}
+\end{figure}
+
+\section{Results}
+
+
+\renewcommand{\imsize}{0.45\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{saddle_3t_1000i_200s_1024r_final}}}
+	{\resizebox{0.5\columnwidth}{!}{\includegraphics{saddleEnergy3t}}}
+  \end{center}
+  \caption{$f(u, v) = (u,v,\sqrt{1.1 - (2u-1)^2 - (2v-1)^2})$: 1000 iterations, $1024\times1024$ resolution, $3\times3$ tiles and dynamic edge scaling. $F(\{z_i,V_i\}) = 3.17*10^{-3}$}
+  \label{fig:edge}
+\end{figure}
+
+
+We compare our centroid calculation to the standard histogram algorithm used for centroid calculation on the CPU. Increasing resolutions have no effect on centroid calculation. With $4\times4$ tiles, the GPU is faster for 2000 seeds or less. 
+
+\renewcommand{\imsize}{0.49\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+\begin{figure}[b]
+  \begin{center}
+	{\resizebox{\imsize}{!}{\includegraphics{avgTimeCentroidsSeedsZoom}}}
+	{\resizebox{\imsize}{!}{\includegraphics{avgTimeCentroidsTexture}}}
+  \end{center}
+  \caption{Average times for (left) varying number of seeds ($1024\times1024$ resolution) and (right) varying texture resolution (30 seeds) for our centroid calculation algorithm.  }
+  \label{fig:edge}
+\end{figure}
+
+%\section{Future Work}
+% To further increase the problem size, an attempt must be made to distribute 
+% 
+%\renewcommand{\imsize}{0.95\columnwidth}  %first instance use \newcommand, all other use \renewcommand
+%\begin{figure}[b]
+%  \begin{center}
+%	{\resizebox{\imsize}{!}{\includegraphics{acm_cluster}}}
+%  \end{center}
+%  \caption{The "acm" cluster. A multi-node cluster with GPU co-processors attached to each node.  }
+%  \label{fig:edge}
+%\end{figure}
+
+
+%%% References
+%% Note: use of BibTeX also works
+
+%\bibliographystyle{plain}
+
+\footnotesize
+\bibliographystyle{acm}       
+\bibliography{thesisrefs}
+
+%\begin{thebibliography}{1}
+
+%\bibitem{Reference Name 1}
+%A.~N.~Author
+%\newblock A title of a reference article.
+%\newblock {\em A Journal}, VOL:PP, YR.
+
+%\end{thebibliography}
+
+\end{multicols}
+
+\end{document}
+

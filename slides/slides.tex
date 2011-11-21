@@ -1,0 +1,145 @@
+% FOR TEXSHOP: 
+%!TEX TS-program = QuickBuild
+
+% Handouts: 
+%documentclass[handout,10pt]{beamer}
+% Slides: 
+\documentclass[10pt]{beamer}
+
+\usepackage{beamerthemesplit}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{movie15}
+\usepackage{algorithm2e}
+
+% configure source code appearance:
+\lstset{basicstyle=\normalfont\ttfamily\tiny,frame=none,aboveskip=0bp,belowskip=0bp,escapechar={|}} 
+
+% Setup appearance:
+\usetheme{Frankfurt}
+\useinnertheme[shadow=true]{rounded}
+%\xdefinecolor{garnet}{cmyk}{0.0, 1.0, 0.89, 0.43}
+%\xdefinecolor{gold}{cmyk}{0.0, 0.16, 1.0, 0.0}
+\xdefinecolor{gold}{cmyk}{0.0, 0.06, 0.29, 0.20}
+\xdefinecolor{garnet}{cmyk}{0.0, 0.99, 0.75, 0.67}
+%\xdefinecolor{garnet}{rgb}{0.329, 0.003, 0.008}
+%\setbeamercolor{structure}{fg=garnet!140}
+\setbeamercolor{structure}{fg=garnet}
+\setbeamercolor{author}{parent=structure}
+%\beamertemplateshadingbackground{white}{gold!40}
+\beamertemplateshadingbackground{white}{gold}
+%\setbeamercolor{title in head/foot}{bg=garnet!140}
+\setbeamercolor{title in head/foot}{bg=garnet}
+
+% Standard packages
+\usepackage[english]{babel}
+%\usepackage[latin1]{inputenc}
+\usepackage{times}
+\usepackage[T1]{fontenc}
+
+% Customizations for Slides
+\setcounter{tocdepth}{1}
+\long\def\symbolfootnote[#1]#2{\begingroup\def\thefootnote{\fnsymbol{footnote}}\footnote[#1]{#2}\endgroup}
+\DeclareMathSymbol{\R}{\mathbin}{AMSb}{"52}
+
+\title[ \hspace{4em} \insertframenumber/\inserttotalframenumber]{How ACS-I Saved Me 129\$: \\ A Journey In Image Manipulation}
+\author[Womeldorff, G. (womeld@scs.fsu.edu)]{%
+  Geoff Womeldorff\inst{1} \\ womeld@scs.fsu.edu}
+\institute[Florida State University]{
+  \inst{1}%
+  Department of Scientific Computing\\
+  Florida State University}
+\date[SR 022708]{4/17/09}
+\subject{Computational Sciences}
+
+\pgfdeclaremask{dscmask}{dscmask}
+\pgfdeclareimage[mask=dscmask, interpolate=true,width=1.75cm]{dsclogo}{dsclogo}
+%\pgfdeclaremask{mymask}{ppt.mask} % Mask image: ppt.mask.jpg 
+%\pgfimage[mask=mymask,interpolate=true]{ppt} % Masking ppt.png
+\beamertemplategridbackground[0.75cm]
+
+\logo{\vbox{\vskip0.1cm\hbox{\pgfuseimage{dsclogo}}}}
+
+
+\DeclareSymbolFont{AMSb}{U}{msb}{m}{n}
+\DeclareMathSymbol{\N}{\mathbin}{AMSb}{"4E}
+\DeclareMathSymbol{\Z}{\mathbin}{AMSb}{"5A}
+\DeclareMathSymbol{\R}{\mathbin}{AMSb}{"52}
+\DeclareMathSymbol{\Q}{\mathbin}{AMSb}{"51}
+\DeclareMathSymbol{\I}{\mathbin}{AMSb}{"49}
+\DeclareMathSymbol{\C}{\mathbin}{AMSb}{"43}
+
+\newcommand{\cM}{\mathcal{M}}
+
+\begin{document}
+
+  \frame
+  {
+       \titlepage
+  }
+
+
+%{ % Need to enclose setbeamertemplate and frame directives in braces to force background image on only one slide
+%\setbeamertemplate{background canvas}{\includegraphics[width=\paperwidth,center]{shorthill_3t_1000i_200s_1024r_final.png}}
+%\include{objective}
+%}
+
+%  \section*{Outline}
+
+%  \frame[allowframebreaks]
+%  {
+%    \frametitle{Outline of Topics}
+%    \tableofcontents
+%  }
+
+
+\include{motivation}
+
+\section{Image Compression}
+\include{compression}
+\include{cvtdefinition}
+\include{lloydsmethod}
+\include{problloyds}
+\include{imagehsv}
+\include{compexample}
+
+\section{Edge Detection}
+\include{edge}
+\include{cannydef}
+\include{process}
+%\include{artistic}
+
+\section{Performance Analysis}
+\include{generators}
+\include{blocksize}
+\include{outsidethebox}
+
+\section{Examples}
+\include{examples}
+
+\section*{Conclusions}
+\include{acknowledgements}
+
+\frame[allowframebreaks]
+{
+	\frametitle{References}
+	  \bibliographystyle{acm}	
+	  \begin{thebibliography}{1022}
+
+		\bibitem{DFG99} \small{{\sc Q. Du, V. Faber, and M. Gunzburger},\;{\em Centroidal Voronoi Tessellations: Applications and Algorithms}, SIAM Review, Vol. 41, No. 4, 1999}
+		\bibitem{JDG02}\small{{\sc L. Ju, Q. Du, and M. Gunzburger},\;{\em Probabilistic Methods for Centroidal Voronoi Tessellations and their Parallel Implementations}, Parallel Computing, Vol. 28, 2002}
+		\bibitem{C86} \small{{\sc J. Canny},\;{\em A Computational Approach to Edge Detection}, IEEE Transactions on Pattern Analysis and Machine Intelligence, Vol. PAMI(8), No. 6, 1986}
+		\bibitem{LABS}\small{{\sc G. Erlebacher, and J. Peterson},\;{\em ACS-I Labs: Image Compression and Edge Detection}}
+
+
+	\end{thebibliography}
+}
+
+\frame{\frametitle{The End}\begin{center}Thank you for listening.\end{center}}
+
+%\include{References}
+%references
+
+\end{document}
